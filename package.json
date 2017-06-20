@@ -1,0 +1,14 @@
+{
+  "name": "debby",
+  "version": "0.0.1",
+  "description": "a toy language",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "evin sellin",
+  "license": "MIT"
+}
