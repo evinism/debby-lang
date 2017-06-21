@@ -1,1 +1,5 @@
 
+
+export function lex(str){
+  
+}

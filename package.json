@@ -10,5 +10,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "evin sellin",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "jison": "^0.4.17"
+  }
 }
