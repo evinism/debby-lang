@@ -1,66 +1,54 @@
-/*
+/* Lambda calculus grammar by Zach Carter */
 
-all whitespace is tokenized equivalently
-slashes start comments and are ignored by lexer.
+%lex
+%%
 
--- rough CFG --
-  [statement] one of:
-    [import];
-    [expression];
-    [declaration];
-    [export];
-    [typeDeclaration];
-
-  // [import] is:
-  // import [name] from [stringLiteral]
-
-  // [export]
-
-  [expression] one of:
-    ([expression]) //binds infinitely tightly
-    [name]
-    [expression].[name] //binds rather tightly
-    [morph]
-    [expression]([name2] [name3]) // binds relatively tightly
-    [expression] [infixOperator] [expression] //binds relatively loosely.
-    [stringLiteral]
-    [numberLiteral]
-    [listLiteral]
-    let [name] be [expression] in [expression] // binds super tightly
-
-  [list]:
-    [ [name] ([expression]) ] // or something like that
-
-  [name]:
-    stringOfNameCharacters
-
-  [stringLiteral] one of:
-    "stringCharacters"
-    'stringCharacters'
-
-  [numberLiteral] one of:
-    you know what a number should look like
-
-  [declaration] one of:
-    morph [name] = [expression] // but we have to check on compile time whether the expression is actually of type morphism
-    list [name] = [expression] // same here
-    obs [name] = [expression] // same here
-    string [name] = [expression] // same
-    num [name] = [expression] // same
-
-  [morph]:
-    \ [name1] [name2] -> [expression]
-
-  [typeDeclaration]:
-    type [name] [withStatement] [equipsStatement]
-
-  [withStatement] one of:
-    [empty string]
-    with [name1] [name2] (...)
-
-  [equipsStatement]
-
-*/
+\s*\n\s*  {/* ignore */}
+"("       { return '('; }
+")"       { return ')'; }
+"^"|"λ"   { return 'LAMBDA'; }
+"."\s?    { return '.'; }
+[a-zA-Z]  { return 'VAR'; }
+\s+       { return 'SEP'; }
+<<EOF>>   { return 'EOF'; }
+/lex
 
 
-if_stmt:
+%right LAMBDA
+%left SEP
+
+%%
+
+file
+  : expr EOF
+    { return $expr; }
+  ;
+
+expr
+  : LAMBDA var_list '.' expr
+    %{
+      var temp = ["LambdaExpr", $var_list.shift(), $expr];
+      $var_list.forEach(function (v) {
+        temp = ["LambdaExpr", v, temp];
+      });
+      $$ = temp;
+    %}
+  | expr SEP expr
+    { $$ = ["ApplyExpr", $expr1, $expr2]; }
+  | var
+    { $$ = ["VarExpr", $var]; }
+  | '(' expr ')'
+    { $$ = $expr; }
+  ;
+
+var_list
+  : var_list var
+    { $$ = $var_list; $$.unshift($var); }
+  | var
+    { $$ = [$var]; }
+  ;
+
+var
+  : VAR
+    { $$ = yytext; }
+  ;
