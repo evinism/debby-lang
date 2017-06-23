@@ -1,5 +1,1 @@
 
-
-export function lex(str){
-  
-}

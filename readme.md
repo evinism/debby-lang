@@ -30,10 +30,11 @@ export Main;
 
 // type declarations are roughly algebraic
 // TODO: reduce type specific syntax.
-type Rockable with internalType internalType equips (
+type Rockable with internalType internalType2 equips (
   blah: [morph], // should have no free variables (but can access item1, item2)
   blah2: [morph]
 );
+
 
 // [1, 2, 3, 4] != [1, 2, 3, 4]
 // list a = [1, 2, 3, 4];

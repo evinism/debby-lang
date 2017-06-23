@@ -8,11 +8,11 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build-grammar": "jison src/grammars/grammar.jison -o ./build/parser.js",
+    "build-grammar": "jison src/grammars/debby.jison -o ./build/parser.js",
     "build-cli": "babel src/cli.js --out-file build/cli.js --source-maps inline",
     "compile": "npm run build-grammar && npm run build-cli",
     "watch": "find src | entr npm run compile",
-    "test": "npm run compile && ./main.js test/test.lambda",
+    "test": "npm run compile && ./main.js test/test_file.dy",
     "watch-test": "find src test | entr npm test",
     "start": "npm run compile && ./main.js"
   },
