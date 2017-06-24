@@ -1,10 +1,23 @@
 # Debby: a toy language
 
+no working version yet.
+
+to get dev running:
+
+`npm install`
+`npm run watch-test`
+
+I dunno if the entr npm package i have contains entr or not, so you may have to get entr.
+
+
+## Rough idea
+
 ```
 // Toy language 1:
 // debby
 // Forces you to define your program in terms of observables
-//  keeping it fairly minimal
+// keeping it fairly minimal
+// probably will compile down to JS or something.
 
 [] defines Lists
 (5, 4) defines tuples
@@ -12,8 +25,7 @@
 import Events EventTypes SendTypes from "system";
 import blah1, blah2 from "./[path]";
 
-// currying is disabled by default
-// no free variables.
+// currying is disabled by default, but is easy syntactically
 morph blah = \arg1, arg2 arg3 -> if (expr) else (otherExp);
 morph blah = \arg1, arg2 -> arg1 && arg2;
 morph still = \arg1, arg2 -> arg1 + arg2;
@@ -29,11 +41,13 @@ add(5, 6); // function calls
 export Main;
 
 // type declarations are roughly algebraic
+
 // TODO: reduce type specific syntax.
-type Rockable with internalType internalType2 equips (
+// TODO: make types make sense in here
+type Rockable over a, b equips
   blah: [morph], // should have no free variables (but can access item1, item2)
   blah2: [morph]
-);
+;
 
 
 // [1, 2, 3, 4] != [1, 2, 3, 4]
