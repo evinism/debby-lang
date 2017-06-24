@@ -67,11 +67,15 @@ slashes start comments and are ignored by lexer.
 
 \/\/.*\n     { /* line comment ignore */ }
 \/\*.*\*\/   { /*block comment ignore*/ }
+"type"       { return 'TYPE'; }
+"over"       { return 'OVER'; }
+"equips"     { return 'EQUIPS'; }
+[a-zA-Z_]+   { return 'NAME'; }
 "("          { return 'OPENPAREN'; }
 ")"          { return 'CLOSEPAREN'; }
 "["          { return 'OPENBRACKET'; }
 "]"          { return 'CLOSEBRACKET'; }
-[a-zA-Z_]+   { return 'NAME'; }
+":"          { return 'COLON'; }
 ";"          { return 'SEMI'; }
 ","          { return 'COMMA'; }
 <<EOF>>      { return 'EOF'; }
@@ -100,10 +104,51 @@ stmts
 stmt
   : SEMI
     { $$ = { type: 'emptyStatement' }; }
-  | expr SEMI
+  | expr SEMI /* Expression Statement */
     { $$ = {
       type: 'expressionStatement',
       expr: $expr
+    }; }
+  | typedec SEMI
+    { $$ = $typedec }
+  ;
+
+typedec
+  : TYPE NAME OVER typenamelist equipsclause
+    { $$ = {
+      type: 'typeDeclaration',
+      name: $NAME,
+      over: $typenamelist,
+      equips: $equipsclause
+    }; }
+  ;
+
+typenamelist
+  : NAME
+    { $$ = [$NAME]; }
+  | NAME COMMA typenamelist
+    { $$ = [$NAME].concat($typenamelist); }
+  ;
+
+equipsclause
+  :
+  | EQUIPS maplist
+    { $$ = $maplist }
+  ;
+
+maplist
+  : mapitem
+    { $$ = [$mapitem]; }
+  | mapitem COMMA maplist
+    { $$ = [$mapitem].concat($maplist); }
+  ;
+
+mapitem
+  : NAME COLON NAME
+    { $$ = {
+      type: "mapItem",
+      key: $NAME,
+      value: $NAME
     }; }
   ;
 
@@ -115,6 +160,7 @@ expr
   | tuple
     { $$ = $tuple }
   | list
+    { $$ = $list }
   ;
 
 
@@ -122,20 +168,6 @@ parenthetical
   : OPENPAREN expr CLOSEPAREN
     { $$ = $expr; }
   ;
-
-
-  /*
-    In order to do non-awful stuff with parens, had to put
-    internal whitespace of parens in lexer
-
-    This means we have to be careful about what we do with whitespace in general
-    (aka what does a . b mean?)
-
-    Let's say i've got [b ()], should that syntax error, because () is an empty expr,
-    or should it handle [b ('c')] differently, making [expr1 expr2] invalid?
-
-    Probs want to make an entirely whitespace free language actually...
-  */
 
 tuple
   : OPENPAREN subtuple CLOSEPAREN

@@ -16,4 +16,12 @@ hello_nerd;
 
      ];
 
+type blah over cat, doc, a;
+
+type blah over cat, doc, a equips
+  a: b,
+  d: f
+;
+
+
 /* */
