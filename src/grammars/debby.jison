@@ -65,17 +65,87 @@ slashes start comments and are ignored by lexer.
 %lex
 %%
 
-\/\/.*\n       { /* line comment ignore */ }
-\/\*.*\*\/     { /*block comment ignore*/ }
-\s*\n\s*       {/* ignore */}
-";"            { return 'SEMI'; }
-<<EOF>>        { return 'EOF'; }
+\/\/.*\n        { /* line comment ignore */ }
+\/\*.*\*\/      { /*block comment ignore*/ }
+\s*\n\s*        { /* ignore */ }
+"("\s*          { return 'OPENPAREN'; }
+\s*")"          { return 'CLOSEPAREN'; }
+"["\s*          { return 'OPENBRACKET'; }
+\s*"]"          { return 'CLOSEBRACKET'; }
+[a-zA-Z_]+      { return 'NAME'; }
+\s*";"          { return 'SEMI'; }
+\s+             { return 'SEP' }
+<<EOF>>         { return 'EOF'; }
 
 /lex
 
 %%
 
 file
-  : SEMI EOF
-    { $$ = yytext; }
+  : stmts EOF
+    { return $stmts; }
+  ;
+
+stmts
+  :
+    { $$ = [] }
+  | stmt stmts
+    {
+      $$ = $stmt.type !== 'emptyStatement'
+        ? [].concat([$stmt], $stmts)
+        : $stmts;
+    }
+  ;
+
+stmt
+  : SEMI
+    { $$ = { type: 'emptyStatement' }; }
+  | expr SEMI
+    { $$ = {
+      type: 'expressionStatement',
+      expr: $expr
+    }; }
+  ;
+
+expr
+  : name
+    { $$ = $name; }
+  | parenthetical
+    { $$ = $parenthetical }
+  | tuple
+    { $$ = $tuple }
+  | list
+  ;
+
+
+parenthetical
+  : OPENPAREN expr CLOSEPAREN
+    { $$ = $expr; }
+  ;
+
+tuple
+  : OPENPAREN subtuple CLOSEPAREN
+    { $$ = {type: 'tuple', value: $subtuple}; }
+  ;
+
+list
+  : OPENBRACKET sublist CLOSEBRACKET
+    { $$ = {type: 'list', value: $sublist}; }
+  ;
+
+subtuple
+  : expr SEP sublist
+    { $$ = [$expr].concat( $sublist ); }
+  ;
+
+sublist
+  : expr
+    { $$ = [$expr]; }
+  | expr SEP sublist
+    { $$ = [$expr].concat( $sublist ); }
+  ;
+
+name
+  : NAME
+    { $$ = {type: 'name', value: $NAME } }
   ;

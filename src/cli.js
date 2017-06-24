@@ -19,5 +19,5 @@ export default function run(){
 
   //const parser = new Parser();
   const test = parser.parse(source);
-  console.log(test);
+  console.log(JSON.stringify(test, null, 2));
 }
