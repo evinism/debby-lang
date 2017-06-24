@@ -1,13 +1,31 @@
 // hello
+/* syntax test */
+
+// doesn't support multiline comments yet. But maybe eventually!!
+
 
 /* sup */
 ;
+
+import foo, bar, baz from './bozoo';
+export foo, bar, baz;
+
+"catsss";
+'';
+
+
+[a, b, c].map(\d -> e);
+
 hello_nerd;
 [    sup,  nerds ];
-(hello, there);
-[ one, two, three ];
+(
+hello, there)
+;[ one, two, three ];
 
-[ four, five, six ];
+/* hah[] */
+[ four, five, six ]; //;
+
+morph something = (\a -> (\b, c -> d))(\e -> f);
 
 [
   seven,
@@ -16,6 +34,8 @@ hello_nerd;
 
      ];
 
+\_ -> 100.46;
+
 type blah over cat, doc, a;
 
 type blah over cat, doc, a equips
@@ -23,5 +43,13 @@ type blah over cat, doc, a equips
   d: f
 ;
 
+\cat, dog -> [
+  dog,
+  (cat, dog)
+]();
 
+
+[];
+
+a.b.c.e().f;
 /* */

@@ -65,25 +65,39 @@ slashes start comments and are ignored by lexer.
 %lex
 %%
 
-\/\/.*\n     { /* line comment ignore */ }
-\/\*.*\*\/   { /*block comment ignore*/ }
-"type"       { return 'TYPE'; }
-"over"       { return 'OVER'; }
-"equips"     { return 'EQUIPS'; }
-[a-zA-Z_]+   { return 'NAME'; }
-"("          { return 'OPENPAREN'; }
-")"          { return 'CLOSEPAREN'; }
-"["          { return 'OPENBRACKET'; }
-"]"          { return 'CLOSEBRACKET'; }
-":"          { return 'COLON'; }
-";"          { return 'SEMI'; }
-","          { return 'COMMA'; }
-<<EOF>>      { return 'EOF'; }
-\s*          { /* ignore whitespace after everything else has been matched */ }
+\/\/.*\n          { /* line comment ignore */ }
+\/\*.*\*\/        { /*block comment ignore, would be better in custom lexer */ }
+"type"            { return 'TYPE'; }
+"over"            { return 'OVER'; }
+"equips"          { return 'EQUIPS'; }
+"import"          { return 'IMPORT'; }
+"export"          { return 'EXPORT'; }
+"from"            { return 'FROM'; }
+\".*\"            { return 'STRINGLIT'; }
+\'.*\'            { return 'STRINGLIT'; }
+[0-9]+(\.[0-9]*)? { return 'NUMBERLIT'; }
+[a-zA-Z_]+        { return 'NAME'; }
+"->"              { return 'RIGHTARROW' }
+"("               { return 'OPENPAREN'; }
+")"               { return 'CLOSEPAREN'; }
+"["               { return 'OPENBRACKET'; }
+"]"               { return 'CLOSEBRACKET'; }
+"="               { return 'ASSIGN'; }
+":"               { return 'COLON'; }
+";"               { return 'SEMI'; }
+","               { return 'COMMA'; }
+"."               { return 'DOT'; }
+"\\"              { return 'BACKSLASH'; }
+<<EOF>>           { return 'EOF'; }
+\s+               { /* ignore whitespace after everything else has been matched */ }
 
 /lex
 
 %%
+
+/* --- Top Level Grammar --- */
+
+/* TODO: introduce symbol table */
 
 file
   : stmts EOF
@@ -110,24 +124,25 @@ stmt
       expr: $expr
     }; }
   | typedec SEMI
-    { $$ = $typedec }
+    { $$ = $typedec; }
+  | assignstmt SEMI
+    { $$ = $assignstmt }
+  | import SEMI
+    { $$ = $import; }
+  | export SEMI
+    { $$ = $export; }
   ;
+
+/* --- Type Declarations --- */
 
 typedec
-  : TYPE NAME OVER typenamelist equipsclause
+  : TYPE NAME OVER namelist equipsclause
     { $$ = {
-      type: 'typeDeclaration',
+      type: 'typeStatement',
       name: $NAME,
-      over: $typenamelist,
+      over: $namelist,
       equips: $equipsclause
     }; }
-  ;
-
-typenamelist
-  : NAME
-    { $$ = [$NAME]; }
-  | NAME COMMA typenamelist
-    { $$ = [$NAME].concat($typenamelist); }
   ;
 
 equipsclause
@@ -144,15 +159,57 @@ maplist
   ;
 
 mapitem
-  : NAME COLON NAME
+  : NAME COLON expr
     { $$ = {
       type: "mapItem",
       key: $NAME,
-      value: $NAME
+      value: $expr
     }; }
   ;
 
+/* --- Imports / Exports --- */
+
+import
+  : IMPORT namelist FROM stringlit
+    { $$ = {
+      type: "importStatement",
+      source: $stringlit.value,
+      items: $namelist,
+    }; }
+  ;
+
+export
+  : EXPORT namelist
+    { $$ = {
+      type: "importStatement",
+      items: $namelist,
+    }; }
+  ;
+
+/* --- Assignment --- */
+
+assignstmt
+  : NAME NAME ASSIGN expr
+    { $$ = {
+      type: 'assignStatement',
+      vartype: $1,
+      name: $2,
+      value: $expr
+    }; }
+  ;
+
+/* --- Expressions --- */
+
+
 expr
+  : applicativeexpr
+    { $$ = $applicativeexpr; }
+  | morph
+    { $$ = $morph; }
+  ;
+
+/* This hacks around operator precedence of applying functions */
+applicativeexpr
   : name
     { $$ = $name; }
   | parenthetical
@@ -161,6 +218,14 @@ expr
     { $$ = $tuple }
   | list
     { $$ = $list }
+  | stringlit
+    { $$ = $stringlit }
+  | numberlit
+    { $$ = $numberlit }
+  | application
+    { $$ = $application }
+  | dotexp
+    { $$ = $dotexp }
   ;
 
 
@@ -175,23 +240,80 @@ tuple
   ;
 
 list
-  : OPENBRACKET sublist CLOSEBRACKET
-    { $$ = {type: 'list', value: $sublist}; }
+  : OPENBRACKET exprlist CLOSEBRACKET
+    { $$ = {type: 'list', value: $exprlist}; }
   ;
 
 subtuple
-  : expr COMMA sublist
-    { $$ = [$expr].concat( $sublist ); }
+  : expr COMMA exprlist
+    { $$ = [$expr].concat( $exprlist ); }
   ;
 
-sublist
-  : expr
+exprlist
+  :
+    { $$ = []; }
+  | expr
     { $$ = [$expr]; }
-  | expr COMMA sublist
-    { $$ = [$expr].concat( $sublist ); }
+  | expr COMMA exprlist
+    { $$ = [$expr].concat( $exprlist ); }
   ;
+
+morph
+  : BACKSLASH namelist RIGHTARROW expr
+    { $$ = {
+      type: 'morph',
+      params: $namelist,
+      body: $expr,
+    }; }
+  ;
+
+application
+  : applicativeexpr OPENPAREN exprlist CLOSEPAREN
+    { $$ = {
+      type: 'application',
+      left: $applicativeexpr,
+      right: $exprlist
+    }}
+  ;
+
+dotexp
+  : applicativeexpr DOT name
+    { $$ = {
+      type: 'dot',
+      source: $applicativeexpr,
+      value: $name
+    }; }
+  ;
+
+
+/* --- Literals --- */
+
+stringlit
+  : STRINGLIT
+    { $$ = {
+      type: 'stringLiteral',
+      value: $STRINGLIT.slice(1, -1)
+    }; }
+  ;
+
+numberlit
+  : NUMBERLIT
+    { $$ = {
+      type: 'numberLiteral',
+      value: parseFloat($NUMBERLIT)
+    }; }
+  ;
+
+/* --- Shared --- */
 
 name
   : NAME
     { $$ = {type: 'name', value: $NAME } }
+  ;
+
+namelist
+  : NAME
+    { $$ = [$NAME]; }
+  | NAME COMMA namelist
+    { $$ = [$NAME].concat($namelist); }
   ;

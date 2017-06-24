@@ -7,23 +7,23 @@
 //  keeping it fairly minimal
 
 [] defines Lists
-(5 4) defines tuples
+(5, 4) defines tuples
 
 import Events EventTypes SendTypes from "system";
-import blah1 blah2 from "./[path]";
+import blah1, blah2 from "./[path]";
 
 // currying is disabled by default
 // no free variables.
-morph blah = \arg1 arg2 arg3 -> if (expr) else (otherExp);
-morph blah = \arg1 arg2 -> arg1 && arg2;
-morph still = \arg1 arg2 -> arg1 + arg2;
+morph blah = \arg1, arg2 arg3 -> if (expr) else (otherExp);
+morph blah = \arg1, arg2 -> arg1 && arg2;
+morph still = \arg1, arg2 -> arg1 + arg2;
 
 // we can define static data from within the closure.
 list a = [];
 
 //
 
-add(5 6); // function calls
+add(5, 6); // function calls
 
 // your program must export a 'Main' observable
 export Main;
@@ -66,7 +66,7 @@ other general notes:
 
   So when you do ([expr]).value, you're getting the morphism defined for that particular type.
   When you do morph func = ([expr]).value, func keeps lexical env of the old object.
-  so morph oneThruTen = [1 2 3 4 5 6 7 8 9 10].map keeps the reference back to the orig array.
+  so morph oneThruTen = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map keeps the reference back to the orig array.
   and so cannot get GC'd
 
 */
