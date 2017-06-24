@@ -65,16 +65,17 @@ slashes start comments and are ignored by lexer.
 %lex
 %%
 
-\/\/.*\n        { /* line comment ignore */ }
-\/\*.*\*\/      { /*block comment ignore*/ }
-"("\s*          { return 'OPENPAREN'; }
-\s*")"          { return 'CLOSEPAREN'; }
-"["\s*          { return 'OPENBRACKET'; }
-\s*"]"          { return 'CLOSEBRACKET'; }
-[a-zA-Z_]+      { return 'NAME'; }
-\s*";"          { return 'SEMI'; }
-\s+             { return 'SEP' }
-<<EOF>>         { return 'EOF'; }
+\/\/.*\n     { /* line comment ignore */ }
+\/\*.*\*\/   { /*block comment ignore*/ }
+"("          { return 'OPENPAREN'; }
+")"          { return 'CLOSEPAREN'; }
+"["          { return 'OPENBRACKET'; }
+"]"          { return 'CLOSEBRACKET'; }
+[a-zA-Z_]+   { return 'NAME'; }
+";"          { return 'SEMI'; }
+","          { return 'COMMA'; }
+<<EOF>>      { return 'EOF'; }
+\s*          { /* ignore whitespace after everything else has been matched */ }
 
 /lex
 
@@ -94,8 +95,6 @@ stmts
         ? [].concat([$stmt], $stmts)
         : $stmts;
     }
-  | SEP stmts
-    { $$ = $stmts }
   ;
 
 stmt
@@ -149,14 +148,14 @@ list
   ;
 
 subtuple
-  : expr SEP sublist
+  : expr COMMA sublist
     { $$ = [$expr].concat( $sublist ); }
   ;
 
 sublist
   : expr
     { $$ = [$expr]; }
-  | expr SEP sublist
+  | expr COMMA sublist
     { $$ = [$expr].concat( $sublist ); }
   ;
 
