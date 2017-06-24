@@ -6,4 +6,12 @@ hello_nerd;
 [    sup  nerds ];
 (hello there);
 [one two three];
+
+[ four five six ];
+
+[
+  seven
+  eight
+  nine   ];
+
 /* */

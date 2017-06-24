@@ -67,7 +67,6 @@ slashes start comments and are ignored by lexer.
 
 \/\/.*\n        { /* line comment ignore */ }
 \/\*.*\*\/      { /*block comment ignore*/ }
-\s*\n\s*        { /* ignore */ }
 "("\s*          { return 'OPENPAREN'; }
 \s*")"          { return 'CLOSEPAREN'; }
 "["\s*          { return 'OPENBRACKET'; }
@@ -95,6 +94,8 @@ stmts
         ? [].concat([$stmt], $stmts)
         : $stmts;
     }
+  | SEP stmts
+    { $$ = $stmts }
   ;
 
 stmt
@@ -122,6 +123,20 @@ parenthetical
   : OPENPAREN expr CLOSEPAREN
     { $$ = $expr; }
   ;
+
+
+  /*
+    In order to do non-awful stuff with parens, had to put
+    internal whitespace of parens in lexer
+
+    This means we have to be careful about what we do with whitespace in general
+    (aka what does a . b mean?)
+
+    Let's say i've got [b ()], should that syntax error, because () is an empty expr,
+    or should it handle [b ('c')] differently, making [expr1 expr2] invalid?
+
+    Probs want to make an entirely whitespace free language actually...
+  */
 
 tuple
   : OPENPAREN subtuple CLOSEPAREN
